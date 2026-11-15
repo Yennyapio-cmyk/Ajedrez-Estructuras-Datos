@@ -341,13 +341,23 @@ public class VentanaAjedrez extends JFrame {
             }
         }
 
-        Timer timer = new Timer(600, null);
+        Timer timer = new Timer(1500, null);
+        timer.setInitialDelay(800);
         timer.addActionListener(e -> {
+        //Resstaurar colores base antes de dibujat el siguiente paso
+             for (int f = 0; f < 8; f++) {
+                for (int c = 0; c < 8; c++) {
+                    casillas[f][c].setBackground(((f + c) % 2 == 0) ? colorClaro : colorOscuro);
+                }
+            }
             if (!colaRepeticion.estaVacia()) {
                 Movimiento m = (Movimiento) colaRepeticion.desencolar();
                 String simbolo = casillas[m.getFilaOrigen()][m.getColOrigen()].getText();
                 casillas[m.getFilaOrigen()][m.getColOrigen()].setText("");
                 casillas[m.getFilaDestino()][m.getColDestino()].setText(simbolo);
+                // Resaltar casilla de origen y destino
+                casillas[m.getFilaOrigen()][m.getColOrigen()].setBackground(colorSeleccion);
+                casillas[m.getFilaDestino()][m.getColDestino()].setBackground(colorDestinoValido);
                 lblEstado.setText("Repetición: " + m.getNotacion());
             } else {
                 timer.stop();
