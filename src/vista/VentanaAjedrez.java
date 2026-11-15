@@ -10,7 +10,7 @@ import modelo.Pieza;
 /**
  * Interfaz gráfica completa del juego de Ajedrez en Java Swing.
  * Conecta el tablero interactivo con el motor JuegoAjedrez y permite visualizar
- * el funcionamiento de las 5 estructuras de datos implementadas desde cero.
+ * de forma organizada las 5 estructuras de datos implementadas desde cero.
  */
 public class VentanaAjedrez extends JFrame {
 
@@ -87,8 +87,8 @@ public class VentanaAjedrez extends JFrame {
 
         itemListaDoble.addActionListener(e -> mostrarInfoListaDoble());
         itemListaCircular.addActionListener(e -> JOptionPane.showMessageDialog(this,
-                "Estructura Lista Circular de Turnos:\n" + juego.getTurnos().recorrer()
-                + "\nTurno activo: " + juego.getTurnoActual(),
+                "Estructura Lista Circular de Turnos:\n\n" + juego.getTurnos().recorrer()
+                + "\n\nTurno activo actual: " + juego.getTurnoActual(),
                 "Lista Circular", JOptionPane.INFORMATION_MESSAGE));
         itemArbolIA.addActionListener(e -> mostrarInfoArbolIA());
 
@@ -170,6 +170,7 @@ public class VentanaAjedrez extends JFrame {
         areaHistorial = new JTextArea();
         areaHistorial.setEditable(false);
         areaHistorial.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        areaHistorial.setMargin(new Insets(8, 8, 8, 8));
         panelDerecho.add(new JScrollPane(areaHistorial), BorderLayout.CENTER);
 
         JPanel panelBotones = new JPanel(new GridLayout(4, 1, 5, 5));
@@ -225,7 +226,6 @@ public class VentanaAjedrez extends JFrame {
 
         Pieza piezaClicada = juego.getPieza(fila, col);
 
-        // Si no hay pieza seleccionada, intentar seleccionar una del turno actual
         if (filaSeleccionada == -1) {
             if (piezaClicada != null && piezaClicada.getColor().equals(juego.getTurnoActual())) {
                 filaSeleccionada = fila;
@@ -235,7 +235,6 @@ public class VentanaAjedrez extends JFrame {
             return;
         }
 
-        // Si hace clic en otra pieza suya, cambiar la selección
         if (piezaClicada != null && piezaClicada.getColor().equals(juego.getTurnoActual())) {
             filaSeleccionada = fila;
             colSeleccionada = col;
@@ -243,7 +242,6 @@ public class VentanaAjedrez extends JFrame {
             return;
         }
 
-        // Intentar mover la pieza seleccionada a (fila, col)
         boolean movido = juego.moverPieza(filaSeleccionada, colSeleccionada, fila, col);
         filaSeleccionada = -1;
         colSeleccionada = -1;
@@ -259,7 +257,6 @@ public class VentanaAjedrez extends JFrame {
             return;
         }
 
-        // Si está activo el modo vs IA y es turno de las negras, responde la IA con su Árbol BST
         if (juego.isVsIA() && juego.getTurnoActual().equals("NEGRAS")) {
             Timer pausaIA = new Timer(350, evt -> {
                 juego.ejecutarTurnoIA();
@@ -300,14 +297,13 @@ public class VentanaAjedrez extends JFrame {
         lblTurno.setText("Turno: " + juego.getTurnoActual() + modo);
         lblEstado.setText(juego.getMensajeEstado());
 
-        // Mostrar el contenido de la Cola de historial sin vaciarla
         StringBuilder sb = new StringBuilder("Historial de Jugadas (Cola FIFO):\n");
         sb.append("---------------------------------\n");
         ColaHistorial copia = juego.getColaHistorial().clonar();
         int num = 1;
         while (!copia.estaVacia()) {
             Movimiento m = (Movimiento) copia.desencolar();
-            sb.append(num++).append(". ").append(m.getNotacion()).append("\n");
+            sb.append(String.format("%2d. %s\n", num++, m.getNotacion()));
         }
         areaHistorial.setText(sb.toString());
     }
@@ -328,7 +324,6 @@ public class VentanaAjedrez extends JFrame {
         bloqueadoPorRepeticion = true;
         lblEstado.setText("Reproduciendo partida desde la Cola...");
 
-        // Dibujar tablero inicial antes de iniciar animación
         String[][] inicial = {
             {"♜", "♞", "♝", "♛", "♚", "♝", "♞", "♜"},
             {"♟", "♟", "♟", "♟", "♟", "♟", "♟", "♟"},
@@ -365,41 +360,101 @@ public class VentanaAjedrez extends JFrame {
     }
 
     /**
-     * Muestra en un cuadro de diálogo el recorrido hacia adelante y hacia atrás de la Lista Doble.
-     * Qué hace: Invoca recorrerAdelante() y recorrerAtras() sobre piezasVivas.
+     * Formatea una cadena de elementos separados por un delimitador en columnas ordenadas.
+     * Qué hace: Divide la secuencia en elementos individuales y los alinea en filas de N columnas.
+     * Qué recibe: textoCrudo (String) salida de la estructura, separador (String), columnas (int).
+     * Qué devuelve: String con los elementos organizados en tabla monoespaciada.
+     */
+    private String formatearEnColumnas(String textoCrudo, String separador, int columnas) {
+        if (textoCrudo.equals("Árbol vacío") || textoCrudo.equals("Sin elementos")) {
+            return textoCrudo;
+        }
+        String[] items = textoCrudo.split(separador);
+        StringBuilder sb = new StringBuilder();
+        int contador = 0;
+        for (String item : items) {
+            String limpio = item.trim();
+            if (!limpio.isEmpty() && !limpio.equals("NULL")) {
+                sb.append(String.format("%-20s", limpio));
+                contador++;
+                if (contador % columnas == 0) {
+                    sb.append("\n");
+                }
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Crea un panel con scroll y fuente monoespaciada para mostrar recorridos ordenados.
+     * Qué hace: Configura un JTextArea no editable con márgenes limpios dentro de un JScrollPane.
+     * Qué recibe: contenido (String) texto formateado a mostrar.
+     * Qué devuelve: JScrollPane listo para insertar en pestañas o diálogos.
+     */
+    private JScrollPane crearPanelTextoOrdenado(String contenido) {
+        JTextArea area = new JTextArea(14, 74);
+        area.setEditable(false);
+        area.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        area.setMargin(new Insets(10, 12, 10, 12));
+        area.setText(contenido);
+        area.setCaretPosition(0);
+        return new JScrollPane(area);
+    }
+
+    /**
+     * Muestra en pestañas ordenadas el recorrido hacia adelante y hacia atrás de la Lista Doble.
+     * Qué hace: Organiza en columnas ambos sentidos de recorrido de piezasVivas.
      * Qué recibe: No recibe parámetros.
      * Qué devuelve: void (no retorna valor).
      */
     private void mostrarInfoListaDoble() {
-        JTextArea area = new JTextArea(12, 45);
-        area.setEditable(false);
-        area.setLineWrap(true);
-        area.setWrapStyleWord(true);
-        area.setText("Total de piezas vivas: " + juego.getPiezasVivas().tamano() + "\n\n"
-                + "RECORRIDO HACIA ADELANTE (inicio -> fin):\n"
-                + juego.getPiezasVivas().recorrerAdelante() + "\n\n"
-                + "RECORRIDO HACIA ATRÁS (fin -> inicio):\n"
-                + juego.getPiezasVivas().recorrerAtras());
-        JOptionPane.showMessageDialog(this, new JScrollPane(area), "Lista Doblemente Enlazada", JOptionPane.INFORMATION_MESSAGE);
+        JTabbedPane pestanas = new JTabbedPane();
+
+        String adelante = "Total de piezas vivas en tablero: " + juego.getPiezasVivas().tamano()
+                + "\nSentido: inicio -> fin (usando puntero sig)\n"
+                + "============================================================================\n\n"
+                + formatearEnColumnas(juego.getPiezasVivas().recorrerAdelante(), "<->", 4);
+
+        String atras = "Total de piezas vivas en tablero: " + juego.getPiezasVivas().tamano()
+                + "\nSentido: fin -> inicio (usando puntero ant)\n"
+                + "============================================================================\n\n"
+                + formatearEnColumnas(juego.getPiezasVivas().recorrerAtras(), "<->", 4);
+
+        pestanas.addTab("Hacia Adelante (Inicio -> Fin)", crearPanelTextoOrdenado(adelante));
+        pestanas.addTab("Hacia Atrás (Fin -> Inicio)", crearPanelTextoOrdenado(atras));
+
+        JOptionPane.showMessageDialog(this, pestanas, "Lista Doblemente Enlazada - Piezas Vivas", JOptionPane.INFORMATION_MESSAGE);
     }
 
     /**
-     * Muestra los recorridos Inorden, Preorden y Posorden del Árbol Binario de Búsqueda de la IA.
-     * Qué hace: Consulta inorden(), preorden() y posorden() en ArbolIA.
+     * Muestra en pestañas separadas los recorridos Inorden, Preorden y Posorden del Árbol IA.
+     * Qué hace: Presenta cada recorrido en una pestaña dedicada con nodos alineados en columnas.
      * Qué recibe: No recibe parámetros.
      * Qué devuelve: void (no retorna valor).
      */
     private void mostrarInfoArbolIA() {
-        JTextArea area = new JTextArea(14, 48);
-        area.setEditable(false);
-        area.setLineWrap(true);
-        area.setWrapStyleWord(true);
-        area.setText("Evaluación táctico-posicional del último turno de la IA (Árbol BST):\n"
-                + "(Inicia una partida 'vs IA' y haz al menos un movimiento para poblar el árbol)\n\n"
-                + "RECORRIDO INORDEN (menor a mayor puntaje):\n" + juego.getArbolEvaluacion().inorden() + "\n\n"
-                + "RECORRIDO PREORDEN (Raíz - Izq - Der):\n" + juego.getArbolEvaluacion().preorden() + "\n\n"
-                + "RECORRIDO POSORDEN (Izq - Der - Raíz):\n" + juego.getArbolEvaluacion().posorden());
-        JOptionPane.showMessageDialog(this, new JScrollPane(area), "Árbol Binario de Búsqueda (IA)", JOptionPane.INFORMATION_MESSAGE);
+        JTabbedPane pestanas = new JTabbedPane();
+
+        String txtInorden = "RECORRIDO INORDEN (Izquierda - Raíz - Derecha)\n"
+                + "Ordena las jugadas evaluadas de MENOR a MAYOR puntaje táctico:\n"
+                + "============================================================================\n\n"
+                + formatearEnColumnas(juego.getArbolEvaluacion().inorden(), "(?<=\\])\\s+", 3);
+
+        String txtPreorden = "RECORRIDO PREORDEN (Raíz - Izquierda - Derecha)\n"
+                + "Visita primero la raíz y luego sus subárboles:\n"
+                + "============================================================================\n\n"
+                + formatearEnColumnas(juego.getArbolEvaluacion().preorden(), "(?<=\\])\\s+", 3);
+
+        String txtPosorden = "RECORRIDO POSORDEN (Izquierda - Derecha - Raíz)\n"
+                + "Visita primero los nodos hijos y al final la raíz:\n"
+                + "============================================================================\n\n"
+                + formatearEnColumnas(juego.getArbolEvaluacion().posorden(), "(?<=\\])\\s+", 3);
+
+        pestanas.addTab("Inorden (Ordenado)", crearPanelTextoOrdenado(txtInorden));
+        pestanas.addTab("Preorden (Raíz-Izq-Der)", crearPanelTextoOrdenado(txtPreorden));
+        pestanas.addTab("Posorden (Izq-Der-Raíz)", crearPanelTextoOrdenado(txtPosorden));
+
+        JOptionPane.showMessageDialog(this, pestanas, "Árbol Binario de Búsqueda (IA)", JOptionPane.INFORMATION_MESSAGE);
     }
 
     /**
