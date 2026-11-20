@@ -5,6 +5,8 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import javax.swing.*;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import modelo.JuegoAjedrez;
@@ -19,7 +21,7 @@ import modelo.Pieza;
 public class VentanaAjedrez extends JFrame {
 
     private JuegoAjedrez juego;
-    private JButton[][] casillas = new JButton[8][8];
+    private Casilla3D[][] casillas = new Casilla3D[8][8];
     private JLabel lblTurno;
     private JLabel lblEstado;
     private JPanel panelTarjetaTurno;
@@ -29,11 +31,11 @@ public class VentanaAjedrez extends JFrame {
     private int colSeleccionada = -1;
     private boolean bloqueadoPorRepeticion = false;
     // Paleta de colores moderna
-    private final Color fondoPrincipal = new  Color(38, 36, 33);
-    private final Color fondoPanelLateral = new Color(48, 46, 43);
-    private final Color fondoHistorial = new Color(33, 31, 29);
+    private final Color fondoPrincipal = new  Color(244, 240, 232);
+    private final Color fondoPanelLateral = new Color(252, 250, 245);
+    private final Color fondoHistorial = new Color(248, 246, 240);
     private final Color colorClaro = new Color(238, 238, 210);
-    private final Color colorOscuro = new Color(118, 150, 86);
+    private final Color colorOscuro = new Color(118, 150, 105);
     private final Color colorSeleccion = new Color(246, 246, 105);
     private final Color colorDestinoValido = new Color(186, 202, 68);
 
@@ -46,7 +48,7 @@ public class VentanaAjedrez extends JFrame {
     public VentanaAjedrez() {
         this.juego = new JuegoAjedrez(false);
 
-        setTitle("Ajedrez - Proyecto Final Estructuras de Datos");
+        setTitle("Ajedrez  3D - Proyecto Final Estructuras de Datos");
         setSize(1020, 740);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -67,7 +69,7 @@ public class VentanaAjedrez extends JFrame {
      */
     private void inicializarMenu() {
         JMenuBar barraMenu = new JMenuBar();
-        barraMenu.setBackground(new Color(30, 28, 26));
+        barraMenu.setBackground(new Color(235, 229, 218));
         barraMenu.setBorder(new EmptyBorder(4, 8, 4, 8));
         
         JMenu menuJuego = new JMenu("Juego");
@@ -127,37 +129,42 @@ public class VentanaAjedrez extends JFrame {
         setJMenuBar(barraMenu);
     }
 
-    /**
-     * Construye la cuadrícula interactiva de 8x8 del tablero de ajedrez.
-     * Qué hace: Crea los 64 botones y les asigna el evento de clic para seleccionar y mover piezas.
+   /**
+     * Construye la cuadrícula interactiva de 8x8 del tablero con marco y casillas 3D.
+     * Qué hace: Crea las 64 casillas 3D y les asigna el evento de clic para seleccionar y mover piezas.
      * Qué recibe: No recibe parámetros.
      * Qué devuelve: void (no retorna valor).
      */
+
     private void inicializarTablero() {
         JPanel contenedorMarco = new JPanel(new BorderLayout());
         contenedorMarco.setBackground(fondoPrincipal);
         contenedorMarco.setBorder(new EmptyBorder(12, 14, 12, 4));
+         // Marco exterior con efecto 3D madera suave
+        JPanel marcoMadera3D = new JPanel(new BorderLayout());
+        marcoMadera3D.setBackground(new Color(176, 145, 110));
+        marcoMadera3D.setBorder(new CompoundBorder(
+                BorderFactory.createBevelBorder(BevelBorder.RAISED, new Color(214, 188, 156), new Color(120, 95, 68)),
+                new EmptyBorder(8, 8, 8, 8)
+        ));
+
 
         JPanel panelTablero = new JPanel(new GridLayout(8, 8));
-        panelTablero.setBorder(new LineBorder(new Color(85, 82, 77), 4, true));
-        
+        panelTablero.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
         for (int fila = 0; fila < 8; fila++) {
             for (int col = 0; col < 8; col++) {
                 final int f = fila;
                 final int c = col;
-                JButton boton = new JButton();
-                boton.setFont(new Font("Serif", Font.PLAIN, 44));
-                boton.setFocusPainted(false);
-                boton.setOpaque(true);
-                boton.setBorderPainted(false);
-                boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+                Casilla3D boton = new Casilla3D();
                 boton.addActionListener(e -> manejarClicCasilla(f, c));
 
                 casillas[fila][col] = boton;
                 panelTablero.add(boton);
             }
         }
-        contenedorMarco.add(panelTablero, BorderLayout.CENTER);
+        marcoMadera3D.add(panelTablero, BorderLayout.CENTER);
+        contenedorMarco.add(marcoMadera3D, BorderLayout.CENTER);
         add(contenedorMarco, BorderLayout.CENTER);
     }
     /**
@@ -167,24 +174,26 @@ public class VentanaAjedrez extends JFrame {
      * Qué devuelve: void (no retorna valor).
      */
 
-    private void inicializarPanelLateral() {
+        private void inicializarPanelLateral() {
         JPanel panelDerecho = new JPanel(new BorderLayout(10, 12));
         panelDerecho.setPreferredSize(new Dimension(320, 0));
-        panelDerecho.setBackground(fondoPanelLateral);
-        panelDerecho.setBorder(BorderFactory.createCompoundBorder(
-                new EmptyBorder(12, 4, 12, 14),
-                BorderFactory.createCompoundBorder(
-                        new LineBorder(new Color(75, 72, 67), 1, true),
-                        new EmptyBorder(12, 12, 12, 12)
-                )
+        panelDerecho.setBackground(fondoPrincipal);
+        panelDerecho.setBorder(new EmptyBorder(12, 4, 12, 14));
+
+        JPanel tarjetaContenedora = new JPanel(new BorderLayout(10, 12));
+        tarjetaContenedora.setBackground(fondoPanelLateral);
+        tarjetaContenedora.setBorder(new CompoundBorder(
+                BorderFactory.createBevelBorder(BevelBorder.RAISED, Color.WHITE, new Color(210, 205, 195)),
+                new EmptyBorder(12, 12, 12, 12)
         ));
+
         // 1. Tarjeta superior de Turno y Estado
         panelTarjetaTurno = new JPanel(new GridLayout(2, 1, 2, 4));
-        panelTarjetaTurno.setBackground(new Color(245, 245, 240));
         panelTarjetaTurno.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(new Color(180, 180, 170), 1, true),
+                BorderFactory.createBevelBorder(BevelBorder.RAISED, Color.WHITE, new Color(195, 192, 184)),
                 new EmptyBorder(10, 10, 10, 10)
         ));
+
         lblTurno = new JLabel("Turno: BLANCAS", SwingConstants.CENTER);
         lblTurno.setFont(new Font("SansSerif", Font.BOLD, 16));
 
@@ -193,41 +202,44 @@ public class VentanaAjedrez extends JFrame {
 
         panelTarjetaTurno.add(lblTurno);
         panelTarjetaTurno.add(lblEstado);
-        panelDerecho.add(panelTarjetaTurno, BorderLayout.NORTH);
+        tarjetaContenedora.add(panelTarjetaTurno, BorderLayout.NORTH);
+
         // 2. Sección central de Historial estilizado
         JPanel panelHistorialContenedor = new JPanel(new BorderLayout(0, 6));
         panelHistorialContenedor.setBackground(fondoPanelLateral);
 
         JLabel lblTituloHistorial = new JLabel("  HISTORIAL DE JUGADAS (COLA FIFO)");
         lblTituloHistorial.setFont(new Font("SansSerif", Font.BOLD, 12));
-        lblTituloHistorial.setForeground(new Color(215, 212, 205));
+        lblTituloHistorial.setForeground(new Color(75, 72, 66));
         lblTituloHistorial.setOpaque(true);
-        lblTituloHistorial.setBackground(new Color(62, 60, 56));
-        lblTituloHistorial.setBorder(new EmptyBorder(7, 6, 7, 6));
+        lblTituloHistorial.setBackground(new Color(232, 228, 218));
+        lblTituloHistorial.setBorder(new CompoundBorder(
+                new LineBorder(new Color(205, 200, 190), 1, true),
+                new EmptyBorder(7, 6, 7, 6)
+        ));
 
         areaHistorial = new JTextArea();
         areaHistorial.setEditable(false);
         areaHistorial.setBackground(fondoHistorial);
-        areaHistorial.setForeground(new Color(235, 235, 228));
+        areaHistorial.setForeground(new Color(55, 52, 48));
         areaHistorial.setFont(new Font("Monospaced", Font.PLAIN, 13));
         areaHistorial.setMargin(new Insets(10, 12, 10, 12));
 
         JScrollPane scrollHistorial = new JScrollPane(areaHistorial);
-        scrollHistorial.setBorder(new LineBorder(new Color(75, 72, 67), 1));
+        scrollHistorial.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
 
         panelHistorialContenedor.add(lblTituloHistorial, BorderLayout.NORTH);
         panelHistorialContenedor.add(scrollHistorial, BorderLayout.CENTER);
-        panelDerecho.add(panelHistorialContenedor, BorderLayout.CENTER);
+        tarjetaContenedora.add(panelHistorialContenedor, BorderLayout.CENTER);
 
-        // 3. Botones inferiores coloridos con efecto hover
+        // 3. Botones inferiores en colores PASTEL con efecto 3D elevado
         JPanel panelBotones = new JPanel(new GridLayout(4, 1, 0, 8));
         panelBotones.setBackground(fondoPanelLateral);
 
-        JButton btnDeshacer = crearBotonEstilizado("↩  Deshacer Jugada (Pila)", new Color(217, 119, 6), new Color(245, 158, 11));
-        JButton btnRehacer = crearBotonEstilizado("↪  Rehacer Jugada (Pila)", new Color(37, 99, 235), new Color(59, 130, 246));
-        JButton btnRepetir = crearBotonEstilizado("▶  Repetir Partida (Cola)", new Color(22, 163, 74), new Color(34, 197, 94));
-        JButton btnPiezas = crearBotonEstilizado("⇄  Piezas Vivas (Lista Doble)", new Color(124, 58, 237), new Color(139, 92, 246));
-
+        JButton btnDeshacer = crearBotonEstilizado("↩  Deshacer Jugada (Pila)", new Color(253, 224, 186), new Color(250, 206, 152));
+        JButton btnRehacer = crearBotonEstilizado("↪  Rehacer Jugada (Pila)", new Color(196, 226, 250), new Color(168, 210, 245));
+        JButton btnRepetir = crearBotonEstilizado("▶  Repetir Partida (Cola)", new Color(194, 237, 206), new Color(165, 224, 182));
+        JButton btnPiezas = crearBotonEstilizado("⇄  Piezas Vivas (Lista Doble)", new Color(225, 208, 242), new Color(210, 186, 235));
 
         btnDeshacer.addActionListener(e -> {
             if (bloqueadoPorRepeticion) return;
@@ -258,28 +270,37 @@ public class VentanaAjedrez extends JFrame {
         panelBotones.add(btnRehacer);
         panelBotones.add(btnRepetir);
         panelBotones.add(btnPiezas);
-        panelDerecho.add(panelBotones, BorderLayout.SOUTH);
+        tarjetaContenedora.add(panelBotones, BorderLayout.SOUTH);
 
+        panelDerecho.add(tarjetaContenedora, BorderLayout.CENTER);
         add(panelDerecho, BorderLayout.EAST);
     }
 
+
    /**
-     * Crea un botón personalizado con color de fondo, texto blanco y efecto hover.
-     * Qué hace: Configura propiedades visuales compatibles con macOS para que el botón conserve su color.
-     * Qué recibe: texto (String), colorNormal (Color), colorHover (Color).
-     * Qué devuelve: JButton estilizado listo para añadir a un panel.
+     * Crea un botón en tono pastel con borde biselado 3D y texto oscuro legible.
+     * Qué hace: Configura relieve 3D (RAISED al reposar, LOWERED al hacer clic) y efecto hover suave.
+     * Qué recibe: texto (String), colorPastel (Color), colorHover (Color).
+     * Qué devuelve: JButton estilizado con apariencia 3D pastel.
      */
-    private JButton crearBotonEstilizado(String texto, Color colorNormal, Color colorHover) {
+    private JButton crearBotonEstilizado(String texto, Color colorPastel, Color colorHover) {
         JButton boton = new JButton(texto);
         boton.setFont(new Font("SansSerif", Font.BOLD, 13));
-        boton.setForeground(Color.WHITE);
-        boton.setBackground(colorNormal);
+        boton.setForeground(new Color(48, 45, 42));
+        boton.setBackground(colorPastel);
         boton.setOpaque(true);
-        boton.setBorderPainted(false);
         boton.setFocusPainted(false);
         boton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        boton.setBorder(new EmptyBorder(10, 14, 10, 14));
 
+        CompoundBorder bordeElevado = new CompoundBorder(
+                BorderFactory.createBevelBorder(BevelBorder.RAISED, colorPastel.brighter(), colorPastel.darker()),
+                new EmptyBorder(8, 12, 8, 12)
+        );
+        CompoundBorder bordePresionado = new CompoundBorder(
+                BorderFactory.createBevelBorder(BevelBorder.LOWERED, colorPastel.brighter(), colorPastel.darker()),
+                new EmptyBorder(8, 12, 8, 12)
+        );
+        boton.setBorder(bordeElevado);
         boton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseEntered(MouseEvent e) {
@@ -288,7 +309,12 @@ public class VentanaAjedrez extends JFrame {
 
             @Override
             public void mouseExited(MouseEvent e) {
-                boton.setBackground(colorNormal);
+                boton.setBackground(colorPastel);
+                boton.setBorder(bordeElevado);
+            }
+            @Override
+            public void mousePressed(MouseEvent e) {
+                boton.setBorder(bordePresionado);
             }
         });
         return boton;
@@ -338,7 +364,7 @@ public class VentanaAjedrez extends JFrame {
         }
 
         if (juego.isVsIA() && juego.getTurnoActual().equals("NEGRAS")) {
-            Timer pausaIA = new Timer(350, evt -> {
+            Timer pausaIA = new Timer(450, evt -> {
                 juego.ejecutarTurnoIA();
                 actualizarVistaCompleta();
                 if (juego.isPartidaTerminada()) {
@@ -350,38 +376,41 @@ public class VentanaAjedrez extends JFrame {
         }
     }
 
+    
     /**
-     * Actualiza las piezas dibujadas, los colores de casillas, el turno y el historial en pantalla.
+     * Actualiza las piezas dibujadas en 3D, los colores de casillas, el turno y el historial en pantalla.
      * Qué hace: Sincroniza todos los componentes visuales de Swing con el estado actual de JuegoAjedrez.
      * Qué recibe: No recibe parámetros.
      * Qué devuelve: void (no retorna valor).
      */
+
     private void actualizarVistaCompleta() {
         for (int f = 0; f < 8; f++) {
             for (int c = 0; c < 8; c++) {
-                Pieza p = juego.getPieza(f, c);
-                casillas[f][c].setText(p != null ? p.getSimbolo() : "");
+                                Pieza p = juego.getPieza(f, c);
+                casillas[f][c].setSimboloPieza(p != null ? p.getSimbolo() : "");
 
                 Color base = ((f + c) % 2 == 0) ? colorClaro : colorOscuro;
                 if (f == filaSeleccionada && c == colSeleccionada) {
-                    casillas[f][c].setBackground(colorSeleccion);
+                    casillas[f][c].setColorCasilla(colorSeleccion);
                 } else if (filaSeleccionada != -1 && juego.esMovimientoLegal(filaSeleccionada, colSeleccionada, f, c, juego.getTurnoActual())) {
-                    casillas[f][c].setBackground(colorDestinoValido);
+                    casillas[f][c].setColorCasilla(colorDestinoValido);
                 } else {
-                    casillas[f][c].setBackground(base);
+                    casillas[f][c].setColorCasilla(base);
                 }
+
             }
         }
-        // Actualizar tarjeta visual de turno según el bando activo
+         // Tarjeta visual de turno en tonos pastel suaves
         boolean esTurnoBlancas = juego.getTurnoActual().equals("BLANCAS");
         if (esTurnoBlancas) {
-            panelTarjetaTurno.setBackground(new Color(245, 245, 238));
-            lblTurno.setForeground(new Color(30, 30, 30));
-            lblEstado.setForeground(new Color(45, 110, 50));
+            panelTarjetaTurno.setBackground(new Color(252, 250, 242));
+            lblTurno.setForeground(new Color(45, 45, 42));
+            lblEstado.setForeground(new Color(65, 125, 70));
         } else {
-            panelTarjetaTurno.setBackground(new Color(32, 32, 32));
-            lblTurno.setForeground(new Color(245, 245, 238));
-            lblEstado.setForeground(new Color(145, 210, 120));
+            panelTarjetaTurno.setBackground(new Color(224, 232, 222));
+            lblTurno.setForeground(new Color(35, 50, 38));
+            lblEstado.setForeground(new Color(55, 105, 65));
         }
 
         String modo = juego.isVsIA() ? " (vs IA)" : " (2P)";
@@ -412,7 +441,7 @@ public class VentanaAjedrez extends JFrame {
 
     /**
      * Reproduce la partida paso a paso desencolando una copia de ColaHistorial.
-     * Qué hace: Limpia el tablero visual y aplica cada movimiento de la cola cada 600 ms.
+     * Qué hace: Limpia el tablero visual, resalta origen/destino y aplica cada jugada cada 1.5 segundos.
      * Qué recibe: No recibe parámetros.
      * Qué devuelve: void (no retorna valor).
      */
@@ -438,8 +467,8 @@ public class VentanaAjedrez extends JFrame {
         };
         for (int f = 0; f < 8; f++) {
             for (int c = 0; c < 8; c++) {
-                casillas[f][c].setText(inicial[f][c]);
-                casillas[f][c].setBackground(((f + c) % 2 == 0) ? colorClaro : colorOscuro);
+                casillas[f][c].setSimboloPieza(inicial[f][c]);
+                casillas[f][c].setColorCasilla(((f + c) % 2 == 0) ? colorClaro : colorOscuro);
             }
         }
 
@@ -449,18 +478,19 @@ public class VentanaAjedrez extends JFrame {
         // Restablecer colores de casillas antes de aplicar el siguiente movimiento
              for (int f = 0; f < 8; f++) {
                 for (int c = 0; c < 8; c++) {
-                    casillas[f][c].setBackground(((f + c) % 2 == 0) ? colorClaro : colorOscuro);
+                casillas[f][c].setColorCasilla(((f + c) % 2 == 0) ? colorClaro : colorOscuro);
+
                 }
             }
             if (!colaRepeticion.estaVacia()) {
                 Movimiento m = (Movimiento) colaRepeticion.desencolar();
-                String simbolo = casillas[m.getFilaOrigen()][m.getColOrigen()].getText();
-                casillas[m.getFilaOrigen()][m.getColOrigen()].setText("");
-                casillas[m.getFilaDestino()][m.getColDestino()].setText(simbolo);
+                                String simbolo = casillas[m.getFilaOrigen()][m.getColOrigen()].getSimboloPieza();
+                casillas[m.getFilaOrigen()][m.getColOrigen()].setSimboloPieza("");
+                casillas[m.getFilaDestino()][m.getColDestino()].setSimboloPieza(simbolo);
                 // Resaltar casilla de origen y destino
-                casillas[m.getFilaOrigen()][m.getColOrigen()].setBackground(colorSeleccion);
-                casillas[m.getFilaDestino()][m.getColDestino()].setBackground(colorDestinoValido);
-                lblEstado.setText("Repetición: " + m.getNotacion());
+                casillas[m.getFilaOrigen()][m.getColOrigen()].setColorCasilla(colorSeleccion);
+                casillas[m.getFilaDestino()][m.getColDestino()].setColorCasilla(colorDestinoValido);
+
             } else {
                 timer.stop();
                 bloqueadoPorRepeticion = false;
@@ -582,4 +612,75 @@ public class VentanaAjedrez extends JFrame {
         juego.iniciarNuevaPartida(vsIA);
         actualizarVistaCompleta();
     }
+    /**
+     * Componente gráfico personalizado que dibuja cada casilla y pieza con efecto de volumen 3D.
+     */
+    private static class Casilla3D extends JButton {
+        private Color colorCasilla = Color.WHITE;
+        private String simboloPieza = "";
+
+        public Casilla3D() {
+            setFocusPainted(false);
+            setBorderPainted(false);
+            setContentAreaFilled(false);
+            setCursor(new Cursor(Cursor.HAND_CURSOR));
+        }
+
+        public void setColorCasilla(Color colorCasilla) {
+            this.colorCasilla = colorCasilla;
+            repaint();
+        }
+
+        public void setSimboloPieza(String simboloPieza) {
+            this.simboloPieza = simboloPieza;
+            repaint();
+        }
+
+        public String getSimboloPieza() {
+            return simboloPieza;
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+            int w = getWidth();
+            int h = getHeight();
+
+            // 1. Degradado sutil en la casilla para profundidad 3D
+            GradientPaint grad = new GradientPaint(0, 0, colorCasilla.brighter(), 0, h, colorCasilla.darker());
+            g2.setPaint(grad);
+            g2.fillRect(0, 0, w, h);
+
+            // 2. Bisel 3D (borde claro arriba/izquierda, borde sombra abajo/derecha)
+            g2.setColor(new Color(255, 255, 255, 95));
+            g2.drawLine(0, 0, w - 1, 0);
+            g2.drawLine(0, 0, 0, h - 1);
+
+            g2.setColor(new Color(0, 0, 0, 45));
+            g2.drawLine(0, h - 1, w - 1, h - 1);
+            g2.drawLine(w - 1, 0, w - 1, h - 1);
+
+            // 3. Dibujar pieza con sombra proyectada 3D
+            if (simboloPieza != null && !simboloPieza.isEmpty()) {
+                Font fuente = new Font("Serif", Font.PLAIN, Math.min(w, h) - 16);
+                g2.setFont(fuente);
+                FontMetrics fm = g2.getFontMetrics();
+                int x = (w - fm.stringWidth(simboloPieza)) / 2;
+                int y = (h - fm.getHeight()) / 2 + fm.getAscent();
+
+                // Sombra proyectada sobre el tablero
+                g2.setColor(new Color(0, 0, 0, 80));
+                g2.drawString(simboloPieza, x + 3, y + 4);
+
+                // Cuerpo principal de la pieza
+                g2.setColor(new Color(30, 30, 30));
+                g2.drawString(simboloPieza, x, y);
+            }
+            g2.dispose();
+        }
+    }
+
 }
