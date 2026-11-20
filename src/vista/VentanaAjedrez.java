@@ -94,18 +94,15 @@ public class VentanaAjedrez extends JFrame {
         menuJuego.add(itemSalir);
 
         JMenu menuEstructuras = new JMenu("Inspeccionar Estructuras");
-        JMenuItem itemListaDoble = new JMenuItem("Ver Piezas Vivas (Lista Doble: Adelante y Atrás)");
+    
         JMenuItem itemListaCircular = new JMenuItem("Ver Ciclo de Turnos (Lista Circular)");
         JMenuItem itemArbolIA = new JMenuItem("Ver Recorridos del Árbol IA (Inorden/Preorden/Posorden)");
 
-        itemListaDoble.addActionListener(e -> mostrarInfoListaDoble());
         itemListaCircular.addActionListener(e -> JOptionPane.showMessageDialog(this,
                 "Estructura Lista Circular de Turnos:\n\n" + juego.getTurnos().recorrer()
                 + "\n\nTurno activo actual: " + juego.getTurnoActual(),
                 "Lista Circular", JOptionPane.INFORMATION_MESSAGE));
         itemArbolIA.addActionListener(e -> mostrarInfoArbolIA());
-
-        menuEstructuras.add(itemListaDoble);
         menuEstructuras.add(itemListaCircular);
         menuEstructuras.add(itemArbolIA);
 
